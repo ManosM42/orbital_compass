@@ -1,8 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Check, Sparkles, ShieldAlert } from "lucide-react";
+import { Check, Sparkles, X, ShieldAlert, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/Chrome";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -95,9 +96,44 @@ const FAQ = [
 
 function Pricing() {
   const [yearly, setYearly] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<(typeof PLANS)[0] | null>(null);
+  const [checkoutStep, setCheckoutStep] = useState<"auth" | "payment">("auth");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const { user, openAuthModal } = useAuth();
+
+  const handlePlanClick = (plan: (typeof PLANS)[0]) => {
+    setSelectedPlan(plan);
+    if (!user) {
+      setCheckoutStep("auth");
+    } else {
+      setCheckoutStep("payment");
+    }
+  };
+
+  const handleProceedToPayment = () => {
+    if (!user) {
+      openAuthModal();
+      return;
+    }
+    setCheckoutStep("payment");
+  };
+
+  const handleCompleteCheckout = async () => {
+    setIsProcessing(true);
+    // Simulate secure checkout completion
+    await new Promise((res) => setTimeout(res, 1500));
+    setIsProcessing(false);
+    setSuccessMessage(`Successfully subscribed to ${selectedPlan?.name}! Telemetry channels unlocked.`);
+    setTimeout(() => {
+      setSelectedPlan(null);
+      setSuccessMessage(null);
+    }, 2500);
+  };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 relative">
       <PageHeader
         eyebrow="Orbital Tiers"
         title="Pick your altitude"
@@ -167,21 +203,130 @@ function Pricing() {
                 ))}
               </ul>
 
-              <Link
-                to="/tracker"
+              <button
+                onClick={() => handlePlanClick(t)}
                 className={cn(
-                  "mt-8 rounded-full px-6 py-3.5 text-center text-sm font-semibold transition-transform hover:scale-[1.02]",
+                  "mt-8 rounded-full px-6 py-3.5 text-center text-sm font-semibold transition-transform hover:scale-[1.02] cursor-pointer",
                   t.featured
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                     : "border border-border bg-secondary/50 text-foreground hover:bg-secondary",
                 )}
               >
                 {price === 0 ? "Initialize Explorer" : `Activate ${t.name}`}
-              </Link>
+              </button>
             </div>
           );
         })}
       </div>
+
+      {/* Checkout / Auth Modal */}
+      {selectedPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="panel relative w-full max-w-md rounded-3xl bg-card p-6 sm:p-8 shadow-2xl border border-primary/30 animate-rise">
+            <button
+              onClick={() => setSelectedPlan(null)}
+              className="absolute top-5 right-5 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {successMessage ? (
+              <div className="py-8 text-center space-y-4">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 text-primary border border-primary/40">
+                  <Check className="h-8 w-8" />
+                </div>
+                <h3 className="font-display text-xl font-bold text-foreground">Transmission Confirmed</h3>
+                <p className="text-sm text-muted-foreground">{successMessage}</p>
+              </div>
+            ) : !user ? (
+              <div className="space-y-6">
+                <div>
+                  <span className="mono-label text-primary">Step 1 of 2</span>
+                  <h3 className="font-display text-2xl font-bold text-foreground mt-1">Sign in required</h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    To activate <strong className="text-foreground">{selectedPlan.name}</strong>, please link your commander credentials or sign in to your ORBITAL account.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-secondary/40 p-4 border border-border/60">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Selected Plan:</span>
+                    <span className="font-bold text-foreground">{selectedPlan.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm mt-2">
+                    <span className="text-muted-foreground">Billing:</span>
+                    <span className="font-bold text-foreground">
+                      {yearly ? `€${selectedPlan.yearly} / year` : selectedPlan.monthly === 0 ? "Free" : `€${selectedPlan.monthly} / month`}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      openAuthModal();
+                    }}
+                    className="w-full rounded-full bg-primary py-3.5 text-center text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-[1.02]"
+                  >
+                    Sign In / Register
+                  </button>
+                  <button
+                    onClick={() => setSelectedPlan(null)}
+                    className="w-full rounded-full border border-border py-3 text-center text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div>
+                  <span className="mono-label text-primary">Step 2 of 2</span>
+                  <h3 className="font-display text-2xl font-bold text-foreground mt-1">Secure Checkout</h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Finalize subscription for <strong className="text-foreground">{selectedPlan.name}</strong>.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-secondary/40 p-4 border border-border/60 space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Commander Account:</span>
+                    <span className="font-mono text-xs text-foreground font-semibold">{user.email || "Active User"}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Plan:</span>
+                    <span className="font-bold text-foreground">{selectedPlan.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm pt-2 border-t border-border/40">
+                    <span className="font-semibold text-foreground">Total Due:</span>
+                    <span className="font-display font-extrabold text-lg text-primary">
+                      {yearly ? `€${selectedPlan.yearly}` : selectedPlan.monthly === 0 ? "€0" : `€${selectedPlan.monthly}`}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    disabled={isProcessing}
+                    onClick={handleCompleteCheckout}
+                    className="w-full flex items-center justify-center gap-2 rounded-full bg-primary py-3.5 text-center text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-[1.02]"
+                  >
+                    {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {isProcessing ? "Authorizing Telemetry..." : selectedPlan.monthly === 0 ? "Activate Free Tier" : "Confirm Subscription"}
+                  </button>
+                  <button
+                    disabled={isProcessing}
+                    onClick={() => setSelectedPlan(null)}
+                    className="w-full rounded-full border border-border py-3 text-center text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Feature comparison breakdown */}
       <section className="mt-24">
