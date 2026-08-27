@@ -93,8 +93,7 @@ export const profileService = {
 
     const userId = session.user.id;
     const fileExt = file.name.split(".").pop();
-    const fileName = `${userId}-${Math.random().toString(36.substring(2))}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const fileName = `${userId}-${Math.random().toString(36).substring(2)}.${fileExt}`;    const filePath = `${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")
