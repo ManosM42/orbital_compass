@@ -8,6 +8,7 @@ import { ISS_NORAD_ID } from "@/services/satellite/satelliteCatalog";
 import { groundTrack, inclinationDeg } from "@/services/satellite/satellitePropagation";
 import { useLiveStates, useNow, useSatelliteGroups } from "@/services/satellite/useOrbitalData";
 import type { Satellite as Sat } from "@/services/satellite/satelliteTypes";
+import ArcadeGame from "@/components/ArcadeGame";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -180,7 +181,7 @@ function Home() {
         </section>
       )}
 
-      {/* Features */}
+      {/* Features & Capabilities */}
       <section className="px-4 py-24 sm:px-6">
         <div className="mx-auto max-w-7xl">
           <p className="mono-label">Capabilities</p>
@@ -202,6 +203,11 @@ function Home() {
                 <p className="mt-2 text-sm text-muted-foreground">{f.body}</p>
               </div>
             ))}
+          </div>
+
+          {/* Interactive Arcade Mini-Game Section */}
+          <div className="mt-16">
+            <ArcadeGame />
           </div>
         </div>
       </section>

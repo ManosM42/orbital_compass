@@ -4,6 +4,7 @@ import { Check, Sparkles, X, ShieldAlert, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/Chrome";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { checkoutService } from "@/services/subscription/checkoutService";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -28,49 +29,65 @@ const PLANS = [
   {
     id: "explorer",
     name: "Explorer",
-    tagline: "Essential satellite tracking for amateur sky-watchers.",
+    tagline: "Get started with the essentials of satellite tracking.",
     monthly: 0,
     yearly: 0,
     featured: false,
     badge: null,
     features: [
-      "Up to 100 satellites tracked",
-      "Standard pass predictions",
-      "Community sightings feed",
-      "Basic SGP4 orbit propagation",
-      "Community support",
+      "Basic 3D globe",
+      "Live satellite tracking",
+      "Above Me",
+      "Basic pass predictions",
+      "ISS / Starlink tracking",
+      "Basic planet exploration",
+      "Limited sightings",
+      "XP & basic badges",
+      "Basic mini-games",
     ],
   },
   {
     id: "pro",
     name: "Pro",
-    tagline: "Advanced telemetry and alerts for dedicated astronomy operators.",
-    monthly: 15,
-    yearly: 144, // €12/mo equivalent, saving 20%
+    tagline: "Unlimited tracking, smart alerts, and full visibility tools.",
+    monthly: 5.99,
+    yearly: 49.99,
     featured: true,
     badge: "Best Value",
     features: [
-      "Up to 5,000 satellites tracked",
-      "Real-time orbital telemetry",
-      "Custom pass alerts & notifications",
-      "High-precision SGP4 propagation",
-      "Priority telemetry feed",
+      "Everything in Explorer",
+      "Unlimited tracking & pass predictions",
+      "Advanced orbital data",
+      "Smart push alerts",
+      "Full visibility engine",
+      "Weather & light-pollution analysis",
+      "\"What Should I Watch?\"",
+      "Unlimited sightings",
+      "Camera + AI-assisted verification",
+      "Advanced missions & all badges",
+      "No ads",
     ],
   },
   {
     id: "intelligence",
     name: "Intelligence",
-    tagline: "Full institutional data feeds, raw element sets, and API access.",
-    monthly: 49,
-    yearly: 470, // €39/mo equivalent, saving ~20%
+    tagline: "Deep orbital analytics, AI, and mission-grade telemetry.",
+    monthly: 12.99,
+    yearly: 99.99,
     featured: false,
     badge: "Mission Control",
     features: [
-      "Unlimited satellite constellations",
-      "Direct raw TLE & Celestrak feeds",
-      "Full REST & WebSocket API access",
-      "Custom constellation modeling",
-      "Dedicated 24/7 telemetry support",
+      "Everything in Pro",
+      "ORBITAL AI",
+      "Advanced orbital analytics",
+      "Orbital Lab",
+      "Historical data",
+      "Constellation analytics",
+      "Conjunction & reentry analysis",
+      "Ground-station & radio data",
+      "Earth Observation",
+      "Deep-space & planetary tracking",
+      "Advanced simulations",
     ],
   },
 ];
@@ -99,11 +116,12 @@ function Pricing() {
   const [selectedPlan, setSelectedPlan] = useState<(typeof PLANS)[0] | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<"auth" | "payment">("auth");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const { user, openAuthModal } = useAuth();
 
   const handlePlanClick = (plan: (typeof PLANS)[0]) => {
+    setCheckoutError(null);
     setSelectedPlan(plan);
     if (!user) {
       setCheckoutStep("auth");
@@ -121,15 +139,27 @@ function Pricing() {
   };
 
   const handleCompleteCheckout = async () => {
-    setIsProcessing(true);
-    // Simulate secure checkout completion
-    await new Promise((res) => setTimeout(res, 1500));
-    setIsProcessing(false);
-    setSuccessMessage(`Successfully subscribed to ${selectedPlan?.name}! Telemetry channels unlocked.`);
-    setTimeout(() => {
+    if (!selectedPlan) return;
+
+    // Explorer is free and already the default plan — nothing to charge.
+    if (selectedPlan.id === "explorer") {
       setSelectedPlan(null);
-      setSuccessMessage(null);
-    }, 2500);
+      return;
+    }
+
+    setIsProcessing(true);
+    setCheckoutError(null);
+    try {
+      // Our internal plan ids are e.g. "pro_monthly" / "intelligence_yearly" —
+      // the server resolves this to a trusted Stripe Price ID; the browser
+      // never sees or chooses a raw price.
+      const planId = `${selectedPlan.id}_${yearly ? "yearly" : "monthly"}`;
+      await checkoutService.redirectToCheckout(planId);
+      // Browser is redirected to Stripe; nothing else to do here.
+    } catch (err: any) {
+      setIsProcessing(false);
+      setCheckoutError(err.message ?? "Checkout failed. Please try again.");
+    }
   };
 
   return (
@@ -230,15 +260,7 @@ function Pricing() {
               <X className="h-5 w-5" />
             </button>
 
-            {successMessage ? (
-              <div className="py-8 text-center space-y-4">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 text-primary border border-primary/40">
-                  <Check className="h-8 w-8" />
-                </div>
-                <h3 className="font-display text-xl font-bold text-foreground">Transmission Confirmed</h3>
-                <p className="text-sm text-muted-foreground">{successMessage}</p>
-              </div>
-            ) : !user ? (
+            {!user ? (
               <div className="space-y-6">
                 <div>
                   <span className="mono-label text-primary">Step 1 of 2</span>
@@ -305,14 +327,25 @@ function Pricing() {
                   </div>
                 </div>
 
+                {checkoutError && (
+                  <div className="flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-xs text-destructive">
+                    <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{checkoutError}</span>
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   <button
                     disabled={isProcessing}
                     onClick={handleCompleteCheckout}
-                    className="w-full flex items-center justify-center gap-2 rounded-full bg-primary py-3.5 text-center text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-[1.02]"
+                    className="w-full flex items-center justify-center gap-2 rounded-full bg-primary py-3.5 text-center text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-[1.02] disabled:opacity-70"
                   >
                     {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {isProcessing ? "Authorizing Telemetry..." : selectedPlan.monthly === 0 ? "Activate Free Tier" : "Confirm Subscription"}
+                    {isProcessing
+                      ? "Redirecting to Stripe..."
+                      : selectedPlan.monthly === 0
+                        ? "Activate Free Tier"
+                        : "Continue to Stripe Checkout"}
                   </button>
                   <button
                     disabled={isProcessing}
@@ -340,28 +373,40 @@ function Pricing() {
           </div>
           <div className="divide-y divide-border/60 text-sm">
             <div className="grid grid-cols-4 gap-4 py-4 items-center">
-              <span className="font-medium text-foreground">Satellite Limit</span>
-              <span className="text-center text-muted-foreground">100</span>
-              <span className="text-center font-bold text-primary">5,000</span>
+              <span className="font-medium text-foreground">Pass Predictions</span>
+              <span className="text-center text-muted-foreground">Basic</span>
+              <span className="text-center font-bold text-primary">Unlimited</span>
               <span className="text-center text-muted-foreground">Unlimited</span>
             </div>
             <div className="grid grid-cols-4 gap-4 py-4 items-center">
-              <span className="font-medium text-foreground">Real-time Telemetry</span>
+              <span className="font-medium text-foreground">Smart Alerts & Visibility Engine</span>
               <span className="text-center text-muted-foreground">—</span>
               <span className="text-center text-primary font-bold">✓</span>
               <span className="text-center text-primary font-bold">✓</span>
             </div>
             <div className="grid grid-cols-4 gap-4 py-4 items-center">
-              <span className="font-medium text-foreground">API Access (REST/WS)</span>
+              <span className="font-medium text-foreground">Camera + AI Verification</span>
               <span className="text-center text-muted-foreground">—</span>
-              <span className="text-center text-muted-foreground">—</span>
-              <span className="text-center text-primary font-bold">✓ Full Access</span>
+              <span className="text-center text-primary font-bold">✓</span>
+              <span className="text-center text-primary font-bold">✓</span>
             </div>
             <div className="grid grid-cols-4 gap-4 py-4 items-center">
-              <span className="font-medium text-foreground">SGP4 Propagation</span>
-              <span className="text-center text-primary font-bold">Standard</span>
-              <span className="text-center text-primary font-bold">High-Precision</span>
-              <span className="text-center text-primary font-bold">Institutional</span>
+              <span className="font-medium text-foreground">ORBITAL AI & Orbital Lab</span>
+              <span className="text-center text-muted-foreground">—</span>
+              <span className="text-center text-muted-foreground">—</span>
+              <span className="text-center text-primary font-bold">✓</span>
+            </div>
+            <div className="grid grid-cols-4 gap-4 py-4 items-center">
+              <span className="font-medium text-foreground">Conjunction / Reentry Analysis</span>
+              <span className="text-center text-muted-foreground">—</span>
+              <span className="text-center text-muted-foreground">—</span>
+              <span className="text-center text-primary font-bold">✓</span>
+            </div>
+            <div className="grid grid-cols-4 gap-4 py-4 items-center">
+              <span className="font-medium text-foreground">Ground-Station & Deep-Space Data</span>
+              <span className="text-center text-muted-foreground">—</span>
+              <span className="text-center text-muted-foreground">—</span>
+              <span className="text-center text-primary font-bold">✓</span>
             </div>
           </div>
         </div>
