@@ -15,7 +15,9 @@ import { TopNav, BottomNav, SiteFooter } from "@/components/Chrome";
 import { BootSequence, REPLAY_EVENT } from "@/components/BootSequence";
 import { ConsentProvider } from "@/components/consent/ConsentProvider";
 import { ConsentBanner, ConsentManager } from "@/components/consent/ConsentBanner";
-import { AuthProvider } from "@/components/AuthProvider";
+import { AuthProvider } from "@/context/AuthContext";
+import { SubscriptionProvider } from "@/context/SubscriptionContext";
+import { AuthModal } from "@/components/AuthModal";
 
 function NotFoundComponent() {
   return (
@@ -141,25 +143,28 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ConsentProvider>
-          <div className="void-bg relative flex min-h-screen flex-col">
-            <div className="starfield pointer-events-none absolute inset-0 opacity-40" aria-hidden />
-            
-            {showBoot && <BootSequence onComplete={() => setShowBoot(false)} />}
+        <SubscriptionProvider>
+          <ConsentProvider>
+            <div className="void-bg relative flex min-h-screen flex-col">
+              <div className="starfield pointer-events-none absolute inset-0 opacity-40" aria-hidden />
 
-            <div className="relative flex min-h-screen flex-col">
-              <TopNav />
-              <main className="flex-1 pb-20 md:pb-0">
-                <Outlet />
-              </main>
-              <SiteFooter />
-              <BottomNav />
+              {showBoot && <BootSequence onComplete={() => setShowBoot(false)} />}
+
+              <div className="relative flex min-h-screen flex-col">
+                <TopNav />
+                <main className="flex-1 pb-20 md:pb-0">
+                  <Outlet />
+                </main>
+                <SiteFooter />
+                <BottomNav />
+              </div>
+
+              <ConsentBanner />
+              <ConsentManager />
+              <AuthModal />
             </div>
-            
-            <ConsentBanner />
-            <ConsentManager />
-          </div>
-        </ConsentProvider>
+          </ConsentProvider>
+        </SubscriptionProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

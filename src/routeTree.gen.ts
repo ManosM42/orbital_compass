@@ -11,11 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboveMeRouteImport } from './routes/above-me'
+import { Route as CameraRouteImport } from './routes/camera'
+import { Route as CommunityRouteImport } from './routes/community'
 import { Route as IssRouteImport } from './routes/iss'
 import { Route as LiveRouteImport } from './routes/live'
+import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as PassesRouteImport } from './routes/passes'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as StarlinkRouteImport } from './routes/starlink'
 import { Route as TrackerRouteImport } from './routes/tracker'
 import { Route as SatelliteIdRouteImport } from './routes/satellite.$id'
@@ -33,6 +37,16 @@ const AboveMeRoute = AboveMeRouteImport.update({
   path: '/above-me',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CameraRoute = CameraRouteImport.update({
+  id: '/camera',
+  path: '/camera',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IssRoute = IssRouteImport.update({
   id: '/iss',
   path: '/iss',
@@ -41,6 +55,11 @@ const IssRoute = IssRouteImport.update({
 const LiveRoute = LiveRouteImport.update({
   id: '/live',
   path: '/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MissionsRoute = MissionsRouteImport.update({
+  id: '/missions',
+  path: '/missions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PassesRoute = PassesRouteImport.update({
@@ -56,6 +75,11 @@ const PricingRoute = PricingRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StarlinkRoute = StarlinkRouteImport.update({
@@ -92,11 +116,15 @@ const SolarSystemPlanetMoonRoute = SolarSystemPlanetMoonRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/above-me': typeof AboveMeRoute
+  '/camera': typeof CameraRoute
+  '/community': typeof CommunityRoute
   '/iss': typeof IssRoute
   '/live': typeof LiveRoute
+  '/missions': typeof MissionsRoute
   '/passes': typeof PassesRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/starlink': typeof StarlinkRoute
   '/tracker': typeof TrackerRoute
   '/satellite/$id': typeof SatelliteIdRoute
@@ -107,11 +135,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/above-me': typeof AboveMeRoute
+  '/camera': typeof CameraRoute
+  '/community': typeof CommunityRoute
   '/iss': typeof IssRoute
   '/live': typeof LiveRoute
+  '/missions': typeof MissionsRoute
   '/passes': typeof PassesRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/starlink': typeof StarlinkRoute
   '/tracker': typeof TrackerRoute
   '/satellite/$id': typeof SatelliteIdRoute
@@ -123,11 +155,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/above-me': typeof AboveMeRoute
+  '/camera': typeof CameraRoute
+  '/community': typeof CommunityRoute
   '/iss': typeof IssRoute
   '/live': typeof LiveRoute
+  '/missions': typeof MissionsRoute
   '/passes': typeof PassesRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/starlink': typeof StarlinkRoute
   '/tracker': typeof TrackerRoute
   '/satellite/$id': typeof SatelliteIdRoute
@@ -140,11 +176,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/above-me'
+    | '/camera'
+    | '/community'
     | '/iss'
     | '/live'
+    | '/missions'
     | '/passes'
     | '/pricing'
     | '/privacy'
+    | '/profile'
     | '/starlink'
     | '/tracker'
     | '/satellite/$id'
@@ -155,11 +195,15 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/above-me'
+    | '/camera'
+    | '/community'
     | '/iss'
     | '/live'
+    | '/missions'
     | '/passes'
     | '/pricing'
     | '/privacy'
+    | '/profile'
     | '/starlink'
     | '/tracker'
     | '/satellite/$id'
@@ -170,11 +214,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/above-me'
+    | '/camera'
+    | '/community'
     | '/iss'
     | '/live'
+    | '/missions'
     | '/passes'
     | '/pricing'
     | '/privacy'
+    | '/profile'
     | '/starlink'
     | '/tracker'
     | '/satellite/$id'
@@ -186,11 +234,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboveMeRoute: typeof AboveMeRoute
+  CameraRoute: typeof CameraRoute
+  CommunityRoute: typeof CommunityRoute
   IssRoute: typeof IssRoute
   LiveRoute: typeof LiveRoute
+  MissionsRoute: typeof MissionsRoute
   PassesRoute: typeof PassesRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
+  ProfileRoute: typeof ProfileRoute
   StarlinkRoute: typeof StarlinkRoute
   TrackerRoute: typeof TrackerRoute
   SatelliteIdRoute: typeof SatelliteIdRoute
@@ -215,6 +267,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboveMeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/camera': {
+      id: '/camera'
+      path: '/camera'
+      fullPath: '/camera'
+      preLoaderRoute: typeof CameraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/iss': {
       id: '/iss'
       path: '/iss'
@@ -227,6 +293,13 @@ declare module '@tanstack/react-router' {
       path: '/live'
       fullPath: '/live'
       preLoaderRoute: typeof LiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/missions': {
+      id: '/missions'
+      path: '/missions'
+      fullPath: '/missions'
+      preLoaderRoute: typeof MissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/passes': {
@@ -248,6 +321,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/starlink': {
@@ -298,11 +378,15 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboveMeRoute: AboveMeRoute,
+  CameraRoute: CameraRoute,
+  CommunityRoute: CommunityRoute,
   IssRoute: IssRoute,
   LiveRoute: LiveRoute,
+  MissionsRoute: MissionsRoute,
   PassesRoute: PassesRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
+  ProfileRoute: ProfileRoute,
   StarlinkRoute: StarlinkRoute,
   TrackerRoute: TrackerRoute,
   SatelliteIdRoute: SatelliteIdRoute,

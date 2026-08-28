@@ -17,11 +17,22 @@ import {
   Trophy,
 } from "lucide-react";
 import { useState, type ComponentType } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { ReplayIntroButton } from "@/components/BootSequence";
 import { useConsent } from "@/components/consent/ConsentProvider";
 import { ADS_ENABLED } from "@/lib/ads-config";
 import { cn } from "@/lib/utils";
 import logoImage from "@/assets/logo.jpg";
+import { useAuth } from "@/context/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { UserIcon as UserIconLucide, Settings, Gem as GemIcon, LogOut } from "lucide-react";
 
 interface NavItem {
   to: string;
@@ -162,6 +173,114 @@ function GroupMenu({ group }: { group: NavGroup }) {
   );
 }
 
+function UserMenu() {
+  const { user, loading, openAuthModal, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  if (loading) {
+    return <div className="h-9 w-9 animate-pulse rounded-full bg-secondary/60" aria-hidden />;
+  }
+
+  if (!user) {
+    return (
+      <button
+        onClick={() => openAuthModal("signIn")}
+        className="hidden rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-secondary sm:inline-flex"
+      >
+        Sign In
+      </button>
+    );
+  }
+
+  const initial = (user.email ?? "C").charAt(0).toUpperCase();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          aria-label="Account menu"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-md transition-transform hover:scale-105"
+        >
+          {user.user_metadata?.["avatar_url"] ? (
+            <img
+              src={user.user_metadata["avatar_url"]}
+              alt=""
+              className="h-9 w-9 rounded-full object-cover"
+            />
+          ) : (
+            initial
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="truncate text-xs text-muted-foreground">
+          {user.email}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+          <UserIconLucide className="mr-2 h-4 w-4" />
+          Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate({ to: "/pricing" })}>
+          <GemIcon className="mr-2 h-4 w-4" />
+          Subscription / Plan
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function MobileAuthLinks({ onNavigate }: { onNavigate: () => void }) {
+  const { user, openAuthModal, signOut } = useAuth();
+
+  if (!user) {
+    return (
+      <button
+        onClick={() => {
+          openAuthModal("signIn");
+          onNavigate();
+        }}
+        className="mt-2 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+      >
+        <UserIconLucide className="h-4 w-4 text-primary" />
+        <span>Sign In</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border/60 space-y-1.5">
+      <Link
+        to="/profile"
+        onClick={onNavigate}
+        className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+      >
+        <UserIconLucide className="h-4 w-4 text-primary" />
+        <span>Profile ({user.email})</span>
+      </Link>
+      <button
+        onClick={() => {
+          signOut();
+          onNavigate();
+        }}
+        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-destructive transition-colors hover:bg-secondary"
+      >
+        <LogOut className="h-4 w-4" />
+        <span>Sign out</span>
+      </button>
+    </div>
+  );
+}
+
 export function TopNav() {
   const [open, setOpen] = useState(false);
 
@@ -208,6 +327,7 @@ export function TopNav() {
           >
             Start tracking
           </Link>
+          <UserMenu />
           <button
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
@@ -244,6 +364,8 @@ export function TopNav() {
                 <span>{item.label}</span>
               </Link>
             ))}
+
+            <MobileAuthLinks onNavigate={() => setOpen(false)} />
 
             <div className="mt-3 pt-3 border-t border-border/60">
               <Link

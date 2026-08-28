@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Check, Sparkles, X, ShieldAlert, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/Chrome";
 import { cn } from "@/lib/utils";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "@/context/AuthContext";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({

@@ -73,14 +73,16 @@ export const profileService = {
       throw new Error("Unauthorized: No active session found.");
     }
 
-    // Enforce server-side ownership by explicitly targeting auth.uid()
-    const { error } = await supabase
-      .from("profiles")
-      .update({
+    // Upsert so this works even if a profile row hasn't been created yet
+    // (the DB trigger normally creates one on signup, but this is a safe fallback).
+    const { error } = await supabase.from("profiles").upsert(
+      {
+        id: session.user.id,
         ...updates,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", session.user.id);
+      },
+      { onConflict: "id" },
+    );
 
     if (error) throw new Error(error.message);
   },
