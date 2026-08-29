@@ -1,9 +1,9 @@
 import Stripe from "stripe";
-import { stripe } from "./stripe";
+import { stripe, getPlanIdFromPriceId } from "./stripe";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export async function handleStripeWebhook(rawBody: string | Buffer, signature: string): Promise<{ received: boolean }> {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = process.env["STRIPE_WEBHOOK_SECRET"];
   if (!webhookSecret) {
     throw new Error("Missing STRIPE_WEBHOOK_SECRET environment variable.");
   }
@@ -34,14 +34,17 @@ export async function handleStripeWebhook(rawBody: string | Buffer, signature: s
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      const userId = session.metadata?.userId || session.client_reference_id;
-      const planId = session.metadata?.planId;
+      const userId = session.metadata?.["userId"] || session.client_reference_id;
+      const planId = session.metadata?.["planId"];
       const customerId = session.customer as string;
       const subscriptionId = session.subscription as string;
 
       if (userId && planId) {
-        // Fetch subscription details to get expiration period
+        // Fetch subscription details to get expiration period.
+        // current_period_end lives on the subscription ITEM in this API
+        // version, not on the subscription object itself.
         const sub = await stripe.subscriptions.retrieve(subscriptionId);
+        const currentPeriodEnd = sub.items.data[0]?.current_period_end;
 
         await supabaseServer.from("user_subscriptions").upsert({
           user_id: userId,
@@ -49,7 +52,9 @@ export async function handleStripeWebhook(rawBody: string | Buffer, signature: s
           status: "active",
           stripe_customer_id: customerId,
           stripe_subscription_id: subscriptionId,
-          current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+          current_period_end: currentPeriodEnd
+            ? new Date(currentPeriodEnd * 1000).toISOString()
+            : null,
           cancel_at_period_end: sub.cancel_at_period_end,
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
@@ -63,6 +68,7 @@ export async function handleStripeWebhook(rawBody: string | Buffer, signature: s
       const subscriptionId = subscription.id;
       const status = subscription.status; // 'active', 'past_due', 'canceled', etc.
       const priceId = subscription.items.data[0]?.price.id;
+      const currentPeriodEnd = subscription.items.data[0]?.current_period_end;
 
       // Find user subscription by Stripe customer or subscription ID
       const { data: userSub } = await supabaseServer
@@ -72,17 +78,15 @@ export async function handleStripeWebhook(rawBody: string | Buffer, signature: s
         .single();
 
       if (userSub) {
-        // Map price ID back to internal plan ID if necessary
-        const { data: planData } = await supabaseServer
-          .from("plans")
-          .select("id")
-          .eq("stripe_price_id", priceId)
-          .single();
+        // Map price ID back to internal plan ID via our trusted server-side mapping
+        const mappedPlanId = priceId ? getPlanIdFromPriceId(priceId) : null;
 
         await supabaseServer.from("user_subscriptions").update({
           status: status === "active" ? "active" : status,
-          ...(planData ? { plan_id: planData.id } : {}),
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          ...(mappedPlanId ? { plan_id: mappedPlanId } : {}),
+          current_period_end: currentPeriodEnd
+            ? new Date(currentPeriodEnd * 1000).toISOString()
+            : null,
           cancel_at_period_end: subscription.cancel_at_period_end,
           updated_at: new Date().toISOString(),
         }).eq("user_id", userSub.user_id);

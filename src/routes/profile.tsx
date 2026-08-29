@@ -1,8 +1,10 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { Shield, Award, Eye, Zap, LogOut, User as UserIcon, Edit3, Check, X, Camera } from "lucide-react";
+import { Shield, Award, Eye, Zap, LogOut, User as UserIcon, Edit3, Check, X, Camera, CreditCard, Loader2 } from "lucide-react";
 import { profileService, type UserProfile, type UserPreferences } from "@/services/profile/profileService";
 import { useAuth } from "@/context/AuthContext";
+import { useSubscription } from "@/context/SubscriptionContext";
+import { checkoutService } from "@/services/subscription/checkoutService";
 import { PageHeader, Stat } from "@/components/Chrome";
 
 export const Route = createFileRoute("/profile")({
@@ -11,6 +13,7 @@ export const Route = createFileRoute("/profile")({
 
 function ProfileRouteComponent() {
   const { user, loading: authLoading, signOut } = useAuth();
+  const { subscription, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -18,6 +21,19 @@ function ProfileRouteComponent() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
+
+  const handleManageBilling = async () => {
+    setPortalLoading(true);
+    setPortalError(null);
+    try {
+      await checkoutService.redirectToBillingPortal();
+    } catch (err: any) {
+      setPortalLoading(false);
+      setPortalError(err.message ?? "Could not open billing portal.");
+    }
+  };
 
   // Edit form state
   const [isEditing, setIsEditing] = useState(false);
@@ -308,9 +324,66 @@ function ProfileRouteComponent() {
             />
             <Stat
               label="Active Plan"
-              value={profile.current_plan.toUpperCase()}
-              hint="Encrypted telemetries unlocked"
+              value={(subscription?.plan?.name ?? "Explorer").toUpperCase()}
+              hint={
+                subLoading
+                  ? "Loading…"
+                  : subscription?.cancel_at_period_end
+                    ? "Cancels at period end"
+                    : "Encrypted telemetries unlocked"
+              }
             />
+          </div>
+
+          {/* Subscription / Billing */}
+          <div className="panel rounded-3xl p-6 sm:p-8">
+            <h3 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Subscription & Billing
+            </h3>
+
+            {portalError && (
+              <div className="mt-4 rounded-lg bg-destructive/10 border border-destructive/30 px-3 py-2 text-xs text-destructive">
+                {portalError}
+              </div>
+            )}
+
+            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-foreground font-semibold">
+                  {subscription?.plan?.name ?? "Explorer"} plan
+                  <span className="ml-2 text-xs font-normal text-muted-foreground uppercase">
+                    {subscription?.status ?? "active"}
+                  </span>
+                </p>
+                {subscription?.current_period_end && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {subscription.cancel_at_period_end ? "Access ends" : "Renews"} on{" "}
+                    {new Date(subscription.current_period_end).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                {subscription?.stripe_customer_id ? (
+                  <button
+                    onClick={handleManageBilling}
+                    disabled={portalLoading}
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
+                  >
+                    {portalLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Manage / Cancel Subscription
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigate({ to: "/pricing" })}
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+                  >
+                    Upgrade Plan
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Badges Section */}

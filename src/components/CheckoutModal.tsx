@@ -55,10 +55,10 @@ export function CheckoutModal({ isOpen, onClose, initialPlanId = "pro_monthly" }
 
         <div className="mt-6 grid grid-cols-2 gap-3">
           {[
-            { id: "pro_monthly", name: "Pro Monthly", price: "€15 / mo" },
-            { id: "pro_yearly", name: "Pro Yearly", price: "€144 / yr" },
-            { id: "intelligence_monthly", name: "Intelligence Monthly", price: "€49 / mo" },
-            { id: "intelligence_yearly", name: "Intelligence Yearly", price: "€470 / yr" },
+            { id: "pro_monthly", name: "Pro Monthly", price: "€5.99 / mo" },
+            { id: "pro_yearly", name: "Pro Yearly", price: "€49.99 / yr" },
+            { id: "intelligence_monthly", name: "Intelligence Monthly", price: "€12.99 / mo" },
+            { id: "intelligence_yearly", name: "Intelligence Yearly", price: "€99.99 / yr" },
           ].map((item) => (
             <button
               key={item.id}

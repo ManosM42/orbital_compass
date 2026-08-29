@@ -22,8 +22,10 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as StarlinkRouteImport } from './routes/starlink'
 import { Route as TrackerRouteImport } from './routes/tracker'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as SatelliteIdRouteImport } from './routes/satellite.$id'
 import { Route as SolarSystemIndexRouteImport } from './routes/solar-system.index'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe.webhook'
 import { Route as SolarSystemPlanetIndexRouteImport } from './routes/solar-system.$planet.index'
 import { Route as SolarSystemPlanetMoonRouteImport } from './routes/solar-system.$planet.$moon'
 
@@ -92,6 +94,11 @@ const TrackerRoute = TrackerRouteImport.update({
   path: '/tracker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SatelliteIdRoute = SatelliteIdRouteImport.update({
   id: '/satellite/$id',
   path: '/satellite/$id',
@@ -100,6 +107,11 @@ const SatelliteIdRoute = SatelliteIdRouteImport.update({
 const SolarSystemIndexRoute = SolarSystemIndexRouteImport.update({
   id: '/solar-system/',
   path: '/solar-system/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe/webhook',
+  path: '/api/stripe/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SolarSystemPlanetIndexRoute = SolarSystemPlanetIndexRouteImport.update({
@@ -127,8 +139,10 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/starlink': typeof StarlinkRoute
   '/tracker': typeof TrackerRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/satellite/$id': typeof SatelliteIdRoute
   '/solar-system/': typeof SolarSystemIndexRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/solar-system/$planet/$moon': typeof SolarSystemPlanetMoonRoute
   '/solar-system/$planet/': typeof SolarSystemPlanetIndexRoute
 }
@@ -146,8 +160,10 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/starlink': typeof StarlinkRoute
   '/tracker': typeof TrackerRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/satellite/$id': typeof SatelliteIdRoute
   '/solar-system': typeof SolarSystemIndexRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/solar-system/$planet/$moon': typeof SolarSystemPlanetMoonRoute
   '/solar-system/$planet': typeof SolarSystemPlanetIndexRoute
 }
@@ -166,8 +182,10 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/starlink': typeof StarlinkRoute
   '/tracker': typeof TrackerRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/satellite/$id': typeof SatelliteIdRoute
   '/solar-system/': typeof SolarSystemIndexRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/solar-system/$planet/$moon': typeof SolarSystemPlanetMoonRoute
   '/solar-system/$planet/': typeof SolarSystemPlanetIndexRoute
 }
@@ -187,8 +205,10 @@ export interface FileRouteTypes {
     | '/profile'
     | '/starlink'
     | '/tracker'
+    | '/auth/callback'
     | '/satellite/$id'
     | '/solar-system/'
+    | '/api/stripe/webhook'
     | '/solar-system/$planet/$moon'
     | '/solar-system/$planet/'
   fileRoutesByTo: FileRoutesByTo
@@ -206,8 +226,10 @@ export interface FileRouteTypes {
     | '/profile'
     | '/starlink'
     | '/tracker'
+    | '/auth/callback'
     | '/satellite/$id'
     | '/solar-system'
+    | '/api/stripe/webhook'
     | '/solar-system/$planet/$moon'
     | '/solar-system/$planet'
   id:
@@ -225,8 +247,10 @@ export interface FileRouteTypes {
     | '/profile'
     | '/starlink'
     | '/tracker'
+    | '/auth/callback'
     | '/satellite/$id'
     | '/solar-system/'
+    | '/api/stripe/webhook'
     | '/solar-system/$planet/$moon'
     | '/solar-system/$planet/'
   fileRoutesById: FileRoutesById
@@ -245,8 +269,10 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   StarlinkRoute: typeof StarlinkRoute
   TrackerRoute: typeof TrackerRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   SatelliteIdRoute: typeof SatelliteIdRoute
   SolarSystemIndexRoute: typeof SolarSystemIndexRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   SolarSystemPlanetMoonRoute: typeof SolarSystemPlanetMoonRoute
   SolarSystemPlanetIndexRoute: typeof SolarSystemPlanetIndexRoute
 }
@@ -344,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/satellite/$id': {
       id: '/satellite/$id'
       path: '/satellite/$id'
@@ -356,6 +389,13 @@ declare module '@tanstack/react-router' {
       path: '/solar-system'
       fullPath: '/solar-system/'
       preLoaderRoute: typeof SolarSystemIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe/webhook': {
+      id: '/api/stripe/webhook'
+      path: '/api/stripe/webhook'
+      fullPath: '/api/stripe/webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/solar-system/$planet/': {
@@ -389,8 +429,10 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   StarlinkRoute: StarlinkRoute,
   TrackerRoute: TrackerRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   SatelliteIdRoute: SatelliteIdRoute,
   SolarSystemIndexRoute: SolarSystemIndexRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   SolarSystemPlanetMoonRoute: SolarSystemPlanetMoonRoute,
   SolarSystemPlanetIndexRoute: SolarSystemPlanetIndexRoute,
 }
